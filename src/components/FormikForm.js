@@ -145,13 +145,11 @@ function FormikForm() {
 
     function del_row (arrayHelpers,index, setFieldValue, bill, amt){   
         set_bill_del(setFieldValue,bill,amt)     
-        arrayHelpers.remove(index)
-        
+        arrayHelpers.remove(index)        
     } 
 
     function set_bill_del (setFieldValue,bill,amt){        
         setFieldValue('BillAmt', bill-=amt)
-        // console.log(bill, amt)
     }
 
     return (
@@ -159,9 +157,7 @@ function FormikForm() {
         initialValues = {initialValues}
         validationSchema = {validationSchema}
         onSubmit = {onSubmit}  
-        validateOnBlur={false}
-        // validateOnChange={false}             
-        >
+        validateOnBlur={false}>        
             {
                 formik =>{                    
                     return <Form>
@@ -210,7 +206,7 @@ function FormikForm() {
                             <FormikControl control = 'input' name = 'BillAmt' type = 'text' label = 'Bill Amount' placeholder = 'Bill Amount'/>                            
                             <FormikControl control = 'input' name = 'TransportChrg' type = 'text' label = 'Transport Charge' placeholder = 'Transport Charge'/>
                             <FormikControl control = 'input' name = 'Advance' type = 'text' label = 'Advance ' placeholder = 'Advance Amount' />
-                            <FormikControl control = 'input' name = 'TotalAmt' type = 'number' label = 'Total Amount' placeholder = 'Total Amount' value={Number(formik.values.BillAmt)+Number(formik.values.TransportChrg)} />
+                            <FormikControl control = 'input' name = 'TotalAmt' type = 'text' label = 'Total Amount' placeholder = 'Total Amount' value={Number(formik.values.BillAmt)+Number(formik.values.TransportChrg)} />
                             <FormikControl control = 'input' name = 'DueAmt' type = 'text' label = 'Due Amount' placeholder = 'Due Amount' value={(Number(formik.values.BillAmt)+Number(formik.values.TransportChrg))-Number(formik.values.Advance)}/>
                             <FormikControl control = 'date' name = 'DeliveryDate' label = 'Delivery Date' placeholderText = 'Delivery Date'/>
                             <FormikControl control = 'textarea' name = 'DeliveryPlace' type = 'text'  placeholder = 'Delivery Address '/>
