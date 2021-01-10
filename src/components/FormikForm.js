@@ -35,11 +35,11 @@ function FormikForm() {
             Order_Rate:'',
             Order_Amount:'',
         }],  
-        TotalAmt:'',
-        Advance:'', 
-        BillAmt:'',
-        TransportChrg:'',
-        DueAmt:'',
+        TotalAmt:0,
+        Advance:0, 
+        BillAmt:0,
+        TransportChrg:0,
+        DueAmt:0,
         DeliveryDate:'',
         DeliveryPlace:'',
         DepositTable:[{
@@ -66,6 +66,7 @@ function FormikForm() {
         Tehsil : Yup.string().required('Required'),
         District : Yup.string().required('Required'),
         PinCode : Yup.string().matches(/^\d{3}\s\d{3}$/, 'Invalid PinCode').required('Required'),
+        State : Yup.string().required('Required'),
         Whatsapp : Yup.string().matches(/^\d{10}$/, 'Invalid WhatsApp No').nullable(),
         Contact : Yup.string().matches(/^\d{10}$/, 'Invalid Contact No').required('Required'),
         CompanyName : Yup.string().required('Required'),
@@ -80,8 +81,8 @@ function FormikForm() {
         TransportChrg : Yup.number().positive().nullable(),
         Advance : Yup.number().positive().required('Required'),
         BillAmt : Yup.number().positive().required('Required'),
-        TotalAmt : Yup.number().positive().required('Required'),
-        DueAmt : Yup.number().positive().required('Required'),
+        TotalAmt : Yup.number().required('Required'),
+        DueAmt : Yup.number().required('Required'),
         DeliveryDate : Yup.date().required('Required'),
         DeliveryPlace : Yup.string().required('Required'),
         DepositTable : Yup.array().of(
@@ -91,7 +92,7 @@ function FormikForm() {
                 Deposit_UTRNo: Yup.string().required('Required'),
                 Deposit_Bank : Yup.string().required('Required')
             })
-        ).required('Required'),
+        ).min(1, 'Minimum one required').required('Required'),
 
         Ac : Yup.string().required('Required'),
         AcHolder : Yup.string().required('Required'),
@@ -101,8 +102,8 @@ function FormikForm() {
         DealerContact : Yup.string().matches(/^\d{10}$/, 'Invalid Mobile No').required('Required')
     })
 
-    const onSubmit = values =>{
-        console.log('Form values', values)
+    const onSubmit = (values, onSubmitProps) =>{
+        console.log('Form values', values)        
         // const payload = values        
         // axios.post('http://localhost:4000/order/add' ,payload)
         // .then((data)=>{
@@ -110,6 +111,7 @@ function FormikForm() {
         //     alert("Successfully submitted form.")
         // })
         // .catch((err)=>{console.log(err)})
+        onSubmitProps.resetForm()
     }
 
     const personal_next = () =>{      
@@ -132,11 +134,33 @@ function FormikForm() {
         setBank(prevBank => !prevBank)
     }
 
+    function add_row (arrayHelpers, setFieldValue, bill, amt){        
+        arrayHelpers.push({Order_Details: '', Order_Quantity: '', Order_Rate: '', Order_Amount: ''})
+        set_bill_add(setFieldValue,bill,amt)
+    } 
+
+    function set_bill_add (setFieldValue,bill,amt){
+        setFieldValue('BillAmt', bill+=amt)        
+    }
+
+    function del_row (arrayHelpers,index, setFieldValue, bill, amt){   
+        set_bill_del(setFieldValue,bill,amt)     
+        arrayHelpers.remove(index)
+        
+    } 
+
+    function set_bill_del (setFieldValue,bill,amt){        
+        setFieldValue('BillAmt', bill-=amt)
+        // console.log(bill, amt)
+    }
+
     return (
        <Formik
         initialValues = {initialValues}
         validationSchema = {validationSchema}
-        onSubmit = {onSubmit}        
+        onSubmit = {onSubmit}  
+        validateOnBlur={false}
+        // validateOnChange={false}             
         >
             {
                 formik =>{                    
@@ -150,6 +174,7 @@ function FormikForm() {
                             <FormikControl control = 'input' type = 'text' name = 'Tehsil' placeholder = 'Tehsil' />
                             <FormikControl control = 'input' type = 'text' name = 'District' placeholder = 'District' />
                             <FormikControl control = 'input' type = 'text' name = 'PinCode' placeholder = 'Enter PinCode eg: 123 456' />
+                            <FormikControl control = 'input' type = 'text' name = 'State' placeholder = 'State'/>
                             <FormikControl control = 'input' type = 'text' name = 'Whatsapp' placeholder = 'Whatsapp Number' />
                             <FormikControl control = 'input' type = 'text' name = 'Contact' placeholder = 'Contact Number' />
                             <FormikControl control = 'input' type = 'text' name = 'CompanyName' placeholder = 'Enter Company Name' />
@@ -170,22 +195,23 @@ function FormikForm() {
                                 </thead>
                                 <tbody>                                    
                                     <FieldArray name = 'OrderTable'  render ={arrayHelpers => (<div> {formik.values.OrderTable.map((Order, index) => (<div key={index}>                                                
-                                            <th scope="col"><button type = 'button' onClick = {() => arrayHelpers.push({Order_Details: '', Order_Quantity: '', Order_Rate: '', Order_Amount: ''})}>+ New</button></th>
-                                            <th scope="col"><button type = 'button' onClick = {() => arrayHelpers.remove(index)}>Delete</button></th>
-                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Details`} placeholder = {`Detail ${index}`} /></th>
-                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Quantity`} placeholder = {`Quantity ${index}`}/></th>
-                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Rate`} placeholder = {`Rate ${index}`}/></th>
-                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Amount`} placeholder = {`Amount ${index}`} value = {formik.values.OrderTable[index].Order_Quantity * formik.values.OrderTable[index].Order_Rate} onChange = {() =>formik.setFieldValue('BillAmt', formik.values.BillAmt+formik.values.OrderTable[index].Order_Amount)}/></th>
+                                            <th scope="col"><button type = 'button' onClick = {() => {add_row(arrayHelpers,formik.setFieldValue, formik.values.BillAmt, formik.values.OrderTable[index].Order_Quantity * formik.values.OrderTable[index].Order_Rate)}}>+ New</button></th>
+                                            <th scope="col"><button type = 'button' onClick = {() => {del_row(arrayHelpers,index,formik.setFieldValue, formik.values.BillAmt,formik.values.OrderTable[index].Order_Quantity * formik.values.OrderTable[index].Order_Rate)}}>Delete</button></th>
+                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Details`} placeholder = {`Detail ${index+1}`} /></th>
+                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Quantity`} placeholder = {`Quantity ${index+1}`}/></th>
+                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Rate`} placeholder = {`Rate ${index+1}`}/></th>
+                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Amount`} placeholder = {`Amount ${index+1}`} value = {formik.values.OrderTable[index].Order_Quantity * formik.values.OrderTable[index].Order_Rate}/></th>
+                                            
                                         </div>))}                                            
                                         </div>)}/>
                                 </tbody>
                             </table>
 
-                            <FormikControl control = 'input' name = 'BillAmt' type = 'text' label = 'Bill Amount' placeholder = 'Bill Amount' />                            
+                            <FormikControl control = 'input' name = 'BillAmt' type = 'text' label = 'Bill Amount' placeholder = 'Bill Amount'/>                            
                             <FormikControl control = 'input' name = 'TransportChrg' type = 'text' label = 'Transport Charge' placeholder = 'Transport Charge'/>
-                            <FormikControl control = 'input' name = 'Advance' type = 'text' label = 'Advance ' placeholder = 'Advance Amount'/>
-                            <FormikControl control = 'input' name = 'TotalAmt' type = 'text' label = 'Total Amount' placeholder = 'Total Amount' />
-                            <FormikControl control = 'input' name = 'DueAmt' type = 'text' label = 'Due Amount' placeholder = 'Due Amount'/>
+                            <FormikControl control = 'input' name = 'Advance' type = 'text' label = 'Advance ' placeholder = 'Advance Amount' />
+                            <FormikControl control = 'input' name = 'TotalAmt' type = 'number' label = 'Total Amount' placeholder = 'Total Amount' value={Number(formik.values.BillAmt)+Number(formik.values.TransportChrg)} />
+                            <FormikControl control = 'input' name = 'DueAmt' type = 'text' label = 'Due Amount' placeholder = 'Due Amount' value={(Number(formik.values.BillAmt)+Number(formik.values.TransportChrg))-Number(formik.values.Advance)}/>
                             <FormikControl control = 'date' name = 'DeliveryDate' label = 'Delivery Date' placeholderText = 'Delivery Date'/>
                             <FormikControl control = 'textarea' name = 'DeliveryPlace' type = 'text'  placeholder = 'Delivery Address '/>
                             
@@ -202,12 +228,12 @@ function FormikForm() {
                                 </thead>
                                 <tbody>                                    
                                     <FieldArray name = 'DepositTable'  render ={arrayHelpers => (<div> {formik.values.DepositTable.map((Deposit, index) => (<div key={index}>                                                
-                                            <th scope="col"><button type = 'button' onClick = {() => arrayHelpers.push({Deposit_Date: '', Deposit_Amount: '', Deposit_UTRNo: '', Deposit_Bank: ''})}>+ New</button></th>
-                                            <th scope="col"><button type = 'button' onClick = {() => arrayHelpers.remove(index)}>Delete</button></th>
-                                            <th scope="col"><FormikControl control = 'date' type = 'text' name = {`DepositTable[${index}].Deposit_Date`} placeholder = {`dd/mm/yyyy`}/></th>
-                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`DepositTable[${index}].Deposit_Amount`} /></th>
-                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`DepositTable[${index}].Deposit_UTRNo`} /></th>
-                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`DepositTable[${index}].Deposit_Bank`}  /></th>
+                                            <th scope="col">{index==0 && <button type = 'button' onClick = {() => arrayHelpers.push({Deposit_Date: '', Deposit_Amount: '', Deposit_UTRNo: '', Deposit_Bank:''}) }>+ New</button>}</th>
+                                            <th scope="col">{index>0 && <button type = 'button' onClick = {() => arrayHelpers.remove(index)}>Delete</button>}</th>
+                                            <th scope="col"><FormikControl control = 'date' type = 'text' name = {`DepositTable[${index}].Deposit_Date`} placeholderText = {`dd/mm/yyyy`}/></th>
+                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`DepositTable[${index}].Deposit_Amount`} placeholder = {`Amount ${index+1}`}  /></th>
+                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`DepositTable[${index}].Deposit_UTRNo`} placeholder = {`IMPS, UTR, Ref No ${index+1}`} /></th>
+                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`DepositTable[${index}].Deposit_Bank`} placeholder = {`Bank ${index+1}`} /></th>
                                         </div>))}                                            
                                         </div>)}/>
                                 </tbody>
@@ -223,7 +249,7 @@ function FormikForm() {
                             <FormikControl control = 'input' type = 'text' name = 'AcNo' placeholder = 'A/c No'/>
                             <FormikControl control = 'input' type = 'text' name = 'IFSC' placeholder = 'IFSC'/>
                             <FormikControl control = 'input' type = 'text' name = 'DealerName' placeholder = 'Dealer Name'/>
-                            <FormikControl control = 'input' type = 'text' name = 'DealerContact' placeholder = 'Mobile Name'/>
+                            <FormikControl control = 'input' type = 'text' name = 'DealerContact' placeholder = 'Mobile Number'/>
                             <button type='button' onClick = {bank_prev}>Previous</button>
                             <button type = 'submit' disabled = {!formik.isValid}>Submit</button>
                             </div>}
