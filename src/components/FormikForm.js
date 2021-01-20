@@ -232,9 +232,9 @@ function FormikForm() {
                                             <th scope="col">{index==0 && <button type = 'button' onClick = {() => arrayHelpers.insert(0,{Deposit_Date: '', Deposit_Amount: '', Deposit_UTRNo: '', Deposit_Bank:''}) }>+ New</button>}</th>
                                             <th scope="col">{index>0 && <button type = 'button' onClick = {() => arrayHelpers.remove(index)}>Delete</button>}</th>
                                             <th scope="col"><FormikControl control = 'date' type = 'text' name = {`DepositTable[${index}].Deposit_Date`} placeholderText = {`dd/mm/yyyy`}/></th>
-                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`DepositTable[${index}].Deposit_Amount`} placeholder = {`Amount ${index+1}`}  /></th>
-                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`DepositTable[${index}].Deposit_UTRNo`} placeholder = {`IMPS, UTR, Ref No ${index+1}`} /></th>
-                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`DepositTable[${index}].Deposit_Bank`} placeholder = {`Bank ${index+1}`} /></th>
+                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`DepositTable[${index}].Deposit_Amount`} placeholder = {`Amount`}  /></th>
+                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`DepositTable[${index}].Deposit_UTRNo`} placeholder = {`IMPS, UTR, Ref No`} /></th>
+                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`DepositTable[${index}].Deposit_Bank`} placeholder = {`Bank`} /></th>
                                         </div>))}                                            
                                         </div>)}/>
                                 </tbody>
