@@ -9,6 +9,7 @@ function FormikForm() {
     const [Personal, setPersonal] = useState(true)
     const [Orders, setOrders] = useState(false)
     const [Bank, setBank] = useState(false)
+    const [count, setCount] = useState(0)
 
     const AcOptions = [
         {key : 'SBI', value : 'SBI'},
@@ -33,8 +34,9 @@ function FormikForm() {
             Order_Details:'',
             Order_Quantity:'',
             Order_Rate:'',
-            Order_Amount:'',
-        }],  
+            Order_Amount:''
+        }],      
+         
         TotalAmt:0,
         Advance:0, 
         BillAmt:0,
@@ -135,7 +137,7 @@ function FormikForm() {
     }
 
     function add_row (arrayHelpers, setFieldValue, bill, amt){        
-        arrayHelpers.push({Order_Details: '', Order_Quantity: '', Order_Rate: '', Order_Amount: ''})
+        arrayHelpers.insert(0,{Order_Details: '', Order_Quantity: '', Order_Rate: '', Order_Amount: ''})
         set_bill_add(setFieldValue,bill,amt)
     } 
 
@@ -181,26 +183,29 @@ function FormikForm() {
                             <table>
                                 <thead>
                                     Orders
+                                    
+                                    
                                     {/* <tr>
-                                        <th scope="col" colspan="2">Srl No</th>
+                                        <th scope="col" >Srl No</th>
                                         <th scope="col ">Details</th>
                                         <th scope="col">Quantity</th>
                                         <th scope="col">Rate</th>
                                         <th scope="col">Amount</th>
                                     </tr> */}
-                                </thead>
-                                <tbody>                                    
+                                </thead> 
+                                <tbody>                                     
                                     <FieldArray name = 'OrderTable'  render ={arrayHelpers => (<div> {formik.values.OrderTable.map((Order, index) => (<div key={index}>                                                
-                                            <th scope="col"><button type = 'button' onClick = {() => {add_row(arrayHelpers,formik.setFieldValue, formik.values.BillAmt, formik.values.OrderTable[index].Order_Quantity * formik.values.OrderTable[index].Order_Rate)}}>+ New</button></th>
-                                            <th scope="col"><button type = 'button' onClick = {() => {del_row(arrayHelpers,index,formik.setFieldValue, formik.values.BillAmt,formik.values.OrderTable[index].Order_Quantity * formik.values.OrderTable[index].Order_Rate)}}>Delete</button></th>
-                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Details`} placeholder = {`Detail ${index+1}`} /></th>
-                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Quantity`} placeholder = {`Quantity ${index+1}`}/></th>
-                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Rate`} placeholder = {`Rate ${index+1}`}/></th>
-                                            <th scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Amount`} placeholder = {`Amount ${index+1}`} value = {formik.values.OrderTable[index].Order_Quantity * formik.values.OrderTable[index].Order_Rate}/></th>
+                                            <td scope="col">{index==0 && <button type = 'button' onClick = {() => {add_row(arrayHelpers,formik.setFieldValue, formik.values.BillAmt, formik.values.OrderTable[index].Order_Quantity * formik.values.OrderTable[index].Order_Rate)}}>Add</button>}</td>
+                                            <td scope="col">{index >0 && <button type = 'button' onClick = {() => {del_row(arrayHelpers,index,formik.setFieldValue, formik.values.BillAmt,formik.values.OrderTable[index].Order_Quantity * formik.values.OrderTable[index].Order_Rate)}}>Delete</button>}</td>
+                                            <td scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Details`} placeholder = {`Detail`} /></td>
+                                            <td scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Quantity`} placeholder = {`Quantity`}/></td>
+                                            <td scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Rate`} placeholder = {`Rate`}/></td>
+                                            <td scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Amount`} placeholder = {`Amount`} value = {formik.values.OrderTable[index].Order_Quantity * formik.values.OrderTable[index].Order_Rate}/></td>
                                             
                                         </div>))}                                            
                                         </div>)}/>
-                                </tbody>
+                                        
+                                 </tbody> 
                             </table>
 
                             <FormikControl control = 'input' name = 'BillAmt' type = 'text' label = 'Bill Amount' placeholder = 'Bill Amount'/>                            
@@ -224,7 +229,7 @@ function FormikForm() {
                                 </thead>
                                 <tbody>                                    
                                     <FieldArray name = 'DepositTable'  render ={arrayHelpers => (<div> {formik.values.DepositTable.map((Deposit, index) => (<div key={index}>                                                
-                                            <th scope="col">{index==0 && <button type = 'button' onClick = {() => arrayHelpers.push({Deposit_Date: '', Deposit_Amount: '', Deposit_UTRNo: '', Deposit_Bank:''}) }>+ New</button>}</th>
+                                            <th scope="col">{index==0 && <button type = 'button' onClick = {() => arrayHelpers.insert(0,{Deposit_Date: '', Deposit_Amount: '', Deposit_UTRNo: '', Deposit_Bank:''}) }>+ New</button>}</th>
                                             <th scope="col">{index>0 && <button type = 'button' onClick = {() => arrayHelpers.remove(index)}>Delete</button>}</th>
                                             <th scope="col"><FormikControl control = 'date' type = 'text' name = {`DepositTable[${index}].Deposit_Date`} placeholderText = {`dd/mm/yyyy`}/></th>
                                             <th scope="col"><FormikControl control = 'input' type = 'text' name = {`DepositTable[${index}].Deposit_Amount`} placeholder = {`Amount ${index+1}`}  /></th>
