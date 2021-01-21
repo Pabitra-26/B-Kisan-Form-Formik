@@ -9,7 +9,7 @@ function FormikForm() {
     const [Personal, setPersonal] = useState(true)
     const [Orders, setOrders] = useState(false)
     const [Bank, setBank] = useState(false)
-    const [count, setCount] = useState(0)
+    
 
     const AcOptions = [
         {key : 'SBI', value : 'SBI'},
@@ -159,7 +159,7 @@ function FormikForm() {
         initialValues = {initialValues}
         validationSchema = {validationSchema}
         onSubmit = {onSubmit}  
-        validateOnBlur={false}>        
+        validateOnBlur={false} > 
             {
                 formik =>{                    
                     return <Form>
@@ -182,8 +182,7 @@ function FormikForm() {
                         {Orders && <div className = 'form-control'>
                             <table>
                                 <thead>
-                                    Orders
-                                    
+                                    Orders                                 
                                     
                                     {/* <tr>
                                         <th scope="col" >Srl No</th>
