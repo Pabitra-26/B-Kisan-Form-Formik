@@ -8,8 +8,7 @@ function FormikForm() {
 
     const [Personal, setPersonal] = useState(true)
     const [Orders, setOrders] = useState(false)
-    const [Bank, setBank] = useState(false)
-    
+    const [Bank, setBank] = useState(false)  
 
     const AcOptions = [
         {key : 'SBI', value : 'SBI'},
@@ -37,11 +36,11 @@ function FormikForm() {
             Order_Amount:''
         }],      
          
-        TotalAmt:0,
-        Advance:0, 
-        BillAmt:0,
-        TransportChrg:0,
-        DueAmt:0,
+        TotalAmt:'',
+        Advance:'', 
+        BillAmt:'',
+        TransportChrg:'',
+        DueAmt:'',
         DeliveryDate:'',
         DeliveryPlace:'',
         DepositTable:[{
@@ -76,10 +75,10 @@ function FormikForm() {
         OrderTable : Yup.array().of(
             Yup.object({
                 Order_Details : Yup.string().required('Required'),
-                Order_Quantity : Yup.number().positive().typeError('Must be a number').required('Required'),
-                Order_Rate : Yup.number().positive().typeError('Must be a number').required('Required'),
+                Order_Quantity : Yup.number().typeError('Must be a number').required('Required'),
+                Order_Rate : Yup.number().typeError('Must be a number').required('Required'),
             })
-        ).required('Must have orders').min(1, 'Minimum 1 order'),        
+        ).required("Must have one order!").min(1, 'Minimum 1 order'),        
         TransportChrg : Yup.number().positive().nullable(),
         Advance : Yup.number().positive().required('Required'),
         BillAmt : Yup.number().positive().required('Required'),
@@ -136,22 +135,60 @@ function FormikForm() {
         setBank(prevBank => !prevBank)
     }
 
-    function add_row (arrayHelpers, setFieldValue, bill, amt){        
+    function add_row (arrayHelpers, setFieldValue, bill, amt,total,due){
         arrayHelpers.insert(0,{Order_Details: '', Order_Quantity: '', Order_Rate: '', Order_Amount: ''})
-        set_bill_add(setFieldValue,bill,amt)
+        set_bill_add(setFieldValue,bill,amt, total, due)
     } 
 
-    function set_bill_add (setFieldValue,bill,amt){
-        setFieldValue('BillAmt', bill+=amt)        
+    function set_bill_add (setFieldValue,bill,amt,total, due){        
+        bill = Number(bill)
+        amt = Number(amt)
+        total = Number(total)
+        due = Number(due)        
+        setFieldValue('BillAmt', bill+=amt)   
+        setFieldValue('TotalAmt', total+amt)  
+        setFieldValue('DueAmt', due+amt)
     }
 
-    function del_row (arrayHelpers,index, setFieldValue, bill, amt){   
-        set_bill_del(setFieldValue,bill,amt)     
-        arrayHelpers.remove(index)        
+    function del_row (arrayHelpers,index, setFieldValue, bill, amt, total, due){   
+        set_bill_del(setFieldValue,bill,amt,total,due) 
+        arrayHelpers.remove(index)   
     } 
 
-    function set_bill_del (setFieldValue,bill,amt){        
-        setFieldValue('BillAmt', bill-=amt)
+    function set_bill_del (setFieldValue,bill,amt,total, due){  
+        bill = Number(bill)
+        amt = Number(amt)   
+        total = Number(total)  
+        due = Number(due) 
+        setFieldValue('BillAmt', bill-=amt) 
+        setFieldValue('TotalAmt', total-amt) 
+        setFieldValue('DueAmt', due-amt)      
+    }
+
+    function handle_quantity_amt(setFieldValue, index, event, rate, bill, amt, total, due){
+        setFieldValue(`OrderTable[${index}].Order_Quantity`, Number(event.target.value))
+        setFieldValue(`OrderTable[${index}].Order_Amount`, Number(event.target.value*rate))
+        amt= Number(event.target.value*rate)        
+        set_bill_add(setFieldValue,bill,amt, total, due)
+    }
+
+    function handle_rate_amt(setFieldValue, index, event,qty, bill, amt, total, due){
+        setFieldValue(`OrderTable[${index}].Order_Rate`, Number(event.target.value))
+        setFieldValue(`OrderTable[${index}].Order_Amount`, Number(event.target.value*qty))
+        amt = Number(event.target.value*qty) 
+    }
+
+    function handle_transport(setFieldValue, bill,total, event,adv){
+        let val =Number(event.target.value)
+        setFieldValue('TransportChrg', val)        
+        setFieldValue('TotalAmt', bill+val)
+        setFieldValue('DueAmt', total+val-adv)
+    }
+
+    function handle_advance(setFieldValue, total, event){
+        let val = Number(event.target.value)
+        setFieldValue('Advance', val)
+        setFieldValue('DueAmt', total-val)
     }
 
     return (
@@ -182,25 +219,16 @@ function FormikForm() {
                         {Orders && <div className = 'form-control'>
                             <table>
                                 <thead>
-                                    Orders                                 
-                                    
-                                    {/* <tr>
-                                        <th scope="col" >Srl No</th>
-                                        <th scope="col ">Details</th>
-                                        <th scope="col">Quantity</th>
-                                        <th scope="col">Rate</th>
-                                        <th scope="col">Amount</th>
-                                    </tr> */}
+                                    Orders 
                                 </thead> 
                                 <tbody>                                     
                                     <FieldArray name = 'OrderTable'  render ={arrayHelpers => (<div> {formik.values.OrderTable.map((Order, index) => (<div key={index}>                                                
-                                            <td scope="col">{index==0 && <button type = 'button' onClick = {() => {add_row(arrayHelpers,formik.setFieldValue, formik.values.BillAmt, formik.values.OrderTable[index].Order_Quantity * formik.values.OrderTable[index].Order_Rate)}}>Add</button>}</td>
-                                            <td scope="col">{index >0 && <button type = 'button' onClick = {() => {del_row(arrayHelpers,index,formik.setFieldValue, formik.values.BillAmt,formik.values.OrderTable[index].Order_Quantity * formik.values.OrderTable[index].Order_Rate)}}>Delete</button>}</td>
+                                            <td scope="col">{index==0 && <button type = 'button' onClick = {() => {add_row(arrayHelpers,formik.setFieldValue, formik.values.BillAmt,formik.values.OrderTable[index].Order_Amount,formik.values.TotalAmt, formik.values.DueAmt)}}>Add</button>}</td>
+                                            <td scope="col"><button type = 'button' onClick = {() => {del_row(arrayHelpers,index,formik.setFieldValue, formik.values.BillAmt,formik.values.OrderTable[index].Order_Amount,formik.values.TotalAmt, formik.values.DueAmt)}}>Delete</button></td>
                                             <td scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Details`} placeholder = {`Detail`} /></td>
-                                            <td scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Quantity`} placeholder = {`Quantity`}/></td>
-                                            <td scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Rate`} placeholder = {`Rate`}/></td>
-                                            <td scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Amount`} placeholder = {`Amount`} value = {formik.values.OrderTable[index].Order_Quantity * formik.values.OrderTable[index].Order_Rate}/></td>
-                                            
+                                            <td scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Quantity`} placeholder = {`Quantity`} onChange = {(event) =>{handle_quantity_amt(formik.setFieldValue,index,event,formik.values.OrderTable[index].Order_Rate, formik.values.BillAmt, formik.values.OrderTable[index].Order_Amount, formik.values.TotalAmt, formik.values.DueAmt)}}/></td>
+                                            <td scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Rate`} placeholder = {`Rate`} onChange = {(event) =>{handle_rate_amt(formik.setFieldValue,index,event,formik.values.OrderTable[index].Order_Quantity, formik.values.BillAmt, formik.values.OrderTable[index].Order_Amount, formik.values.TotalAmt, formik.values.DueAmt)}}/></td>
+                                            <td scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Amount`} placeholder = {`Amount`}  /></td>
                                         </div>))}                                            
                                         </div>)}/>
                                         
@@ -208,28 +236,21 @@ function FormikForm() {
                             </table>
 
                             <FormikControl control = 'input' name = 'BillAmt' type = 'text' label = 'Bill Amount' placeholder = 'Bill Amount'/>                            
-                            <FormikControl control = 'input' name = 'TransportChrg' type = 'text' label = 'Transport Charge' placeholder = 'Transport Charge'/>
-                            <FormikControl control = 'input' name = 'Advance' type = 'text' label = 'Advance ' placeholder = 'Advance Amount' />
-                            <FormikControl control = 'input' name = 'TotalAmt' type = 'text' label = 'Total Amount' placeholder = 'Total Amount' value={Number(formik.values.BillAmt)+Number(formik.values.TransportChrg)} />
-                            <FormikControl control = 'input' name = 'DueAmt' type = 'text' label = 'Due Amount' placeholder = 'Due Amount' value={(Number(formik.values.BillAmt)+Number(formik.values.TransportChrg))-Number(formik.values.Advance)}/>
+                            <FormikControl control = 'input' name = 'TransportChrg' type = 'text' label = 'Transport Charge' placeholder = 'Transport Charge' onChange = {(event) =>handle_transport(formik.setFieldValue, formik.values.BillAmt, formik.values.TotalAmt,event, formik.values.Advance)}/>
+                            <FormikControl control = 'input' name = 'Advance' type = 'text' label = 'Advance ' placeholder = 'Advance Amount' onChange = {(event) =>handle_advance(formik.setFieldValue, formik.values.TotalAmt, event)} />
+                            <FormikControl control = 'input' name = 'TotalAmt' type = 'text' label = 'Total Amount' placeholder = 'Total Amount' />
+                            <FormikControl control = 'input' name = 'DueAmt' type = 'text' label = 'Due Amount' placeholder = 'Due Amount' />
                             <FormikControl control = 'date' name = 'DeliveryDate' label = 'Delivery Date' placeholderText = 'Delivery Date'/>
                             <FormikControl control = 'textarea' name = 'DeliveryPlace' type = 'text'  placeholder = 'Delivery Address '/>
                             
                             <table>
                                 <thead>
                                     Deposit Details
-                                    {/* <tr>
-                                        <th scope="col" colspan="2">Srl No</th>
-                                        <th scope="col ">Deposit Date</th>
-                                        <th scope="col">Amount</th>
-                                        <th scope="col">UTR, IMPS, Ref No.</th>
-                                        <th scope="col">Bank Name</th>
-                                    </tr> */}
                                 </thead>
                                 <tbody>                                    
                                     <FieldArray name = 'DepositTable'  render ={arrayHelpers => (<div> {formik.values.DepositTable.map((Deposit, index) => (<div key={index}>                                                
-                                            <th scope="col">{index==0 && <button type = 'button' onClick = {() => arrayHelpers.insert(0,{Deposit_Date: '', Deposit_Amount: '', Deposit_UTRNo: '', Deposit_Bank:''}) }>+ New</button>}</th>
-                                            <th scope="col">{index>0 && <button type = 'button' onClick = {() => arrayHelpers.remove(index)}>Delete</button>}</th>
+                                            <th scope="col">{index==0 && <button type = 'button' onClick = {() => arrayHelpers.insert(0,{Deposit_Date: '', Deposit_Amount: '', Deposit_UTRNo: '', Deposit_Bank:''}) }>Add</button>}</th>
+                                            <th scope="col"><button type = 'button' onClick = {() => arrayHelpers.remove(index)}>Delete</button></th>
                                             <th scope="col"><FormikControl control = 'date' type = 'text' name = {`DepositTable[${index}].Deposit_Date`} placeholderText = {`dd/mm/yyyy`}/></th>
                                             <th scope="col"><FormikControl control = 'input' type = 'text' name = {`DepositTable[${index}].Deposit_Amount`} placeholder = {`Amount`}  /></th>
                                             <th scope="col"><FormikControl control = 'input' type = 'text' name = {`DepositTable[${index}].Deposit_UTRNo`} placeholder = {`IMPS, UTR, Ref No`} /></th>
