@@ -178,7 +178,7 @@ function FormikForm() {
         let val =Number(event.target.value)
         setFieldValue('TransportChrg', val)        
         setFieldValue('TotalAmt', bill+val)
-        setFieldValue('DueAmt', total+val-adv)
+        setFieldValue('DueAmt', bill+val-adv)
     }
 
     function handle_advance(setFieldValue, total, event){
