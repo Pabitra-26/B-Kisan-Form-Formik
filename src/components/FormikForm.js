@@ -8,7 +8,9 @@ function FormikForm() {
 
     const [Personal, setPersonal] = useState(true)
     const [Orders, setOrders] = useState(false)
-    const [Bank, setBank] = useState(false)  
+    const [Bank, setBank] = useState(false)
+    const [arr, setarr] = useState([])
+
 
     const AcOptions = [
         {key : 'SBI', value : 'SBI'},
@@ -135,19 +137,10 @@ function FormikForm() {
         setBank(prevBank => !prevBank)
     }
 
-    function set_bill_add (setFieldValue,bill,amt,total, due){        
-        bill = Number(bill)
-        amt = Number(amt)
-        total = Number(total)
-        due = Number(due)        
-        setFieldValue('BillAmt', bill+=amt)   
-        setFieldValue('TotalAmt', total+amt)  
-        setFieldValue('DueAmt', due+amt)
-    }
-
     function del_row (arrayHelpers,index, setFieldValue, bill, amt, total, due){   
         set_bill_del(setFieldValue,bill,amt,total,due)
         arrayHelpers.remove(index)   
+        arr.splice((arr.length-1)-index,1)
     } 
 
     function set_bill_del (setFieldValue,bill,amt,total, due){  
@@ -160,18 +153,70 @@ function FormikForm() {
         setFieldValue('DueAmt', due-amt)      
     }
 
-    function handle_quantity_amt(setFieldValue, index, event, rate, bill, amt, total, due){
-        setFieldValue(`OrderTable[${index}].Order_Quantity`, Number(event.target.value))
-        setFieldValue(`OrderTable[${index}].Order_Amount`, Number(event.target.value*rate))
-        amt= Number(event.target.value*rate)        
-        set_bill_add(setFieldValue,bill,amt,total, due)               
+    function sum_array(arr){
+        let sum = 0
+        for(var i=0;i<arr.length;i++){
+            sum+=arr[i]
+        }
+        return sum
     }
 
-    function handle_rate_amt(setFieldValue, index, event,qty, bill, amt, total, due){
-        setFieldValue(`OrderTable[${index}].Order_Rate`, Number(event.target.value))
-        setFieldValue(`OrderTable[${index}].Order_Amount`, Number(event.target.value*qty))
-        amt = Number(event.target.value*qty)         
-        set_bill_add(setFieldValue,bill,amt,total, due)        
+    function handle_quantity_amt(setFieldValue, index, event, rate, amt, len, transport, advance){
+        if(index==0){
+            setFieldValue(`OrderTable[${index}].Order_Quantity`, Number(event.target.value))
+            setFieldValue(`OrderTable[${index}].Order_Amount`, Number(event.target.value*rate))
+            amt= Number(event.target.value*rate)
+            if(len-arr.length==1){
+               arr.push(amt)
+            }
+            else{
+                arr[len-1] = amt
+            }
+            let sum = sum_array(arr)
+            setFieldValue('BillAmt', sum)  
+            setFieldValue('TotalAmt',sum+transport)
+            setFieldValue('DueAmt', sum+transport-advance)      
+        }
+        else{
+            setFieldValue(`OrderTable[${index}].Order_Quantity`, Number(event.target.value))
+            setFieldValue(`OrderTable[${index}].Order_Amount`, Number(event.target.value*rate))
+            amt= Number(event.target.value*rate)
+            arr[(arr.length-1)-index] = amt
+            let sum = sum_array(arr)
+            setFieldValue('BillAmt', sum)  
+            setFieldValue('TotalAmt',sum+transport)
+            setFieldValue('DueAmt', sum+transport-advance)
+
+        }               
+    }
+
+    function handle_rate_amt(setFieldValue, index, event,qty, amt, len, transport, advance){
+        if(index==0){
+            setFieldValue(`OrderTable[${index}].Order_Rate`, Number(event.target.value))
+            setFieldValue(`OrderTable[${index}].Order_Amount`, Number(event.target.value*qty))
+            amt = Number(event.target.value*qty)         
+            if(len-arr.length==1){
+                arr.push(amt)
+            }
+            else{
+                arr[len-1] = amt
+            }
+            let sum = sum_array(arr)
+            setFieldValue('BillAmt', sum)  
+            setFieldValue('TotalAmt',sum+transport)
+            setFieldValue('DueAmt', sum+transport-advance)      
+        }
+        else{
+            setFieldValue(`OrderTable[${index}].Order_Rate`, Number(event.target.value))
+            setFieldValue(`OrderTable[${index}].Order_Amount`, Number(event.target.value*qty))
+            amt = Number(event.target.value*qty)
+            arr[(arr.length-1)-index] = amt
+            let sum = sum_array(arr)
+            setFieldValue('BillAmt', sum)  
+            setFieldValue('TotalAmt',sum+transport)
+            setFieldValue('DueAmt', sum+transport-advance)
+
+        }  
     }
 
     function handle_transport(setFieldValue, bill,total, event,adv){
@@ -222,8 +267,8 @@ function FormikForm() {
                                             <td scope="col">{index==0 && <button type = 'button' onClick = {() => arrayHelpers.insert(0,{Order_Details: '', Order_Quantity: '', Order_Rate: '', Order_Amount: ''})}>Add</button>}</td>
                                             <td scope="col">{index>0 && <button type = 'button' onClick = {() => {del_row(arrayHelpers,index,formik.setFieldValue, formik.values.BillAmt,formik.values.OrderTable[index].Order_Amount,formik.values.TotalAmt, formik.values.DueAmt)}}>Delete</button>}</td>
                                             <td scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Details`} placeholder = {`Detail`} /></td>
-                                            <td scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Quantity`} placeholder = {`Quantity`} onBlur = {(event) =>{handle_quantity_amt(formik.setFieldValue,index,event,formik.values.OrderTable[index].Order_Rate, formik.values.BillAmt, formik.values.OrderTable[index].Order_Amount, formik.values.TotalAmt, formik.values.DueAmt)}}/></td>
-                                            <td scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Rate`} placeholder = {`Rate`} onBlur = {(event) =>{handle_rate_amt(formik.setFieldValue,index,event,formik.values.OrderTable[index].Order_Quantity, formik.values.BillAmt, formik.values.OrderTable[index].Order_Amount, formik.values.TotalAmt, formik.values.DueAmt)}}/></td>
+                                            <td scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Quantity`} placeholder = {`Quantity`} onChange = {(event) =>{handle_quantity_amt(formik.setFieldValue,index,event,formik.values.OrderTable[index].Order_Rate, formik.values.OrderTable[index].Order_Amount, formik.values.OrderTable.length, formik.values.TransportChrg, formik.values.Advance)}}/></td>
+                                            <td scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Rate`} placeholder = {`Rate`} onChange = {(event) =>{handle_rate_amt(formik.setFieldValue,index,event,formik.values.OrderTable[index].Order_Quantity, formik.values.OrderTable[index].Order_Amount, formik.values.OrderTable.length, formik.values.TransportChrg, formik.values.Advance)}}/></td>
                                             <td scope="col"><FormikControl control = 'input' type = 'text' name = {`OrderTable[${index}].Order_Amount`} placeholder = {`Amount`}  /></td>
                                         </div>))}                                            
                                         </div>)}/>
